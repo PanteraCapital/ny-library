@@ -4,7 +4,7 @@ const path = require('path')
 const {promisify} = require('util')
 const slugify = require('slugify')
 const yaml = require('js-yaml')
-const {get: deepProp} = require('lodash')
+const {get: deepProp, escape: escapeHtml} = require('lodash')
 const merge = require('deepmerge')
 const mime = require('mime-types')
 
@@ -135,6 +135,9 @@ exports.stringTemplate = (configPath, ...args) => {
 
   return ''
 }
+
+// stringTemplate output is rendered unescaped, so untrusted arguments must be escaped by the caller.
+exports.escapeHtml = escapeHtml
 
 // When we stop supporting Node 8, let's drop promisify for fs.promises.readFile
 const readFileAsync = promisify(fs.readFile)
