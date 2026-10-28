@@ -7,7 +7,7 @@ const GoogleStrategy = require('passport-google-oauth20')
 const SlackStrategy = require('passport-slack-oauth2').Strategy
 
 const log = require('./logger')
-const {stringTemplate: template, formatUrl} = require('./utils')
+const {stringTemplate: template, formatUrl, isSameOriginPath} = require('./utils')
 
 const router = require('express-promise-router')()
 const domains = new Set(process.env.APPROVED_DOMAINS.split(/,\s?/g))
@@ -78,7 +78,8 @@ router.get('/logout', (req, res) => {
 })
 
 router.get('/auth/redirect', passport.authenticate(authStrategy, {failureRedirect: formatUrl('/login')}), (req, res) => {
-  res.redirect(req.session.authRedirect || formatUrl('/'))
+  const {authRedirect} = req.session
+  res.redirect(isSameOriginPath(authRedirect) ? authRedirect : formatUrl('/'))
 })
 
 router.use((req, res, next) => {
@@ -94,7 +95,12 @@ router.use((req, res, next) => {
   }
 
   log.info('User not authenticated')
-  req.session.authRedirect = formatUrl(req.path)
+  const authRedirect = formatUrl(req.path)
+  if (isSameOriginPath(authRedirect)) {
+    req.session.authRedirect = authRedirect
+  } else {
+    delete req.session.authRedirect
+  }
   res.redirect(formatUrl('/login'))
 })
 

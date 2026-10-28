@@ -162,3 +162,13 @@ exports.formatUrl = (url) => {
   if (url.startsWith('/')) return exports.pathPrefix + url.slice(1)
   return exports.pathPrefix + url
 }
+
+// Browsers read a leading "//" or "/\" as the start of another host, and they
+// strip tabs and newlines from a URL before parsing it, so a same-origin
+// redirect target needs exactly one leading slash and no control characters.
+exports.isSameOriginPath = (target) => {
+  if (typeof target !== 'string') return false
+  // eslint-disable-next-line no-control-regex
+  if (/[\x00-\x1f\x7f]/.test(target)) return false
+  return /^\/(?![/\\])/.test(target)
+}
