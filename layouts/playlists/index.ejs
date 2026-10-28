@@ -8,7 +8,7 @@
     <div class="g-body">
       <div class="g-main-content">
         <% if (locals.children && children.length) { %>
-        <%- include('../partials/childrenList', {children, kicker: template('playlist.childrenList.kicker', title), formatUrl}) %>
+        <%- include('../partials/childrenList', {children, kicker: template.text('playlist.childrenList.kicker', title), formatUrl}) %>
         <% } %>
       </div>
 
