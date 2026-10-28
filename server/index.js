@@ -6,7 +6,7 @@ const csp = require('helmet-csp')
 
 const {middleware: cache} = require('./cache')
 const {getMeta} = require('./list')
-const {formatUrl, allMiddleware, requireWithFallback} = require('./utils')
+const {formatUrl, isSameOriginPath, allMiddleware, requireWithFallback} = require('./utils')
 const userInfo = require('./routes/userInfo')
 const pages = require('./routes/pages')
 const categories = require('./routes/categories')
@@ -48,7 +48,8 @@ app.use(formatUrl('/assets'), express.static(path.join(__dirname, '../public')))
 
 // strip trailing slashes from URLs
 app.get(/(.+)\/$/, (req, res, next) => {
-  res.redirect(req.params[0])
+  const target = req.params[0]
+  res.redirect(isSameOriginPath(target) ? target : formatUrl('/'))
 })
 
 app.get(formatUrl('/view-on-site/:docId'), (req, res, next) => {
