@@ -23,7 +23,7 @@
         <% } %>
 
         <% if (locals.children && children.length) { %>
-        <%- include('partials/childrenList', {children, kicker: template('folder.childrenList.kicker', title), formatUrl}) %>
+        <%- include('partials/childrenList', {children, kicker: template.text('folder.childrenList.kicker', title), formatUrl}) %>
         <% } %>
       </div>
       <%- include('partials/imgModal') %>

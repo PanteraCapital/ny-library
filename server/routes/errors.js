@@ -39,6 +39,9 @@ async function loadInlineAssets() {
   assets.stringTemplate = (key, ...args) => {
     return assets[key] || stringTemplate(key, ...args)
   }
+  assets.stringTemplate.text = (key, ...args) => {
+    return assets[key] || stringTemplate.text(key, ...args)
+  }
 
   try {
     await Promise.all(assetLoaders)

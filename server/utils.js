@@ -4,7 +4,7 @@ const path = require('path')
 const {promisify} = require('util')
 const slugify = require('slugify')
 const yaml = require('js-yaml')
-const {get: deepProp} = require('lodash')
+const {get: deepProp, escape: escapeHtml} = require('lodash')
 const merge = require('deepmerge')
 const mime = require('mime-types')
 
@@ -119,7 +119,7 @@ exports.getConfig = (configPath) => {
   return deepProp(config, configPath)
 }
 
-exports.stringTemplate = (configPath, ...args) => {
+function renderStringTemplate(configPath, ...args) {
   const stringConfig = deepProp(config, configPath)
   const configType = typeof stringConfig
 
@@ -135,6 +135,22 @@ exports.stringTemplate = (configPath, ...args) => {
 
   return ''
 }
+
+const escapeTemplateArg = (arg) => {
+  if (typeof arg === 'string') return escapeHtml(arg)
+  if (Array.isArray(arg)) return arg.map(escapeTemplateArg)
+  return arg
+}
+
+// String templates contain markup and are rendered unescaped, so every value
+// interpolated into them must be HTML-encoded.
+exports.stringTemplate = (configPath, ...args) => {
+  return renderStringTemplate(configPath, ...args.map(escapeTemplateArg))
+}
+
+// Plain-text variant for output that EJS escapes itself (`<%= %>`); using
+// stringTemplate there would double-encode the arguments.
+exports.stringTemplate.text = renderStringTemplate
 
 // When we stop supporting Node 8, let's drop promisify for fs.promises.readFile
 const readFileAsync = promisify(fs.readFile)
