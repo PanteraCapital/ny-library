@@ -6,7 +6,7 @@ const csp = require('helmet-csp')
 
 const {middleware: cache} = require('./cache')
 const {getMeta} = require('./list')
-const {formatUrl, allMiddleware, requireWithFallback} = require('./utils')
+const {formatUrl, allMiddleware, requireWithFallback, escapeHtml} = require('./utils')
 const userInfo = require('./routes/userInfo')
 const pages = require('./routes/pages')
 const categories = require('./routes/categories')
@@ -31,6 +31,7 @@ if ((process.env.TRUST_PROXY || '').toUpperCase() === 'TRUE') {
 
 app.set('view engine', 'ejs')
 app.set('views', [path.join(__dirname, '../custom/layouts'), path.join(__dirname, '../layouts')])
+app.locals.escapeHtml = escapeHtml
 
 app.get(formatUrl('/healthcheck'), (req, res) => {
   res.send('OK')

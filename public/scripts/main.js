@@ -67,38 +67,36 @@ $(document).ready(function() {
 
     if (!data || data.length == 0) {
       if (elementAttributes.emptyText) {
-        $target.append("<p>" + elementAttributes.emptyText + "</p>");
+        $target.append(createTextElement('p', '', elementAttributes.emptyText));
       }
       return;
     }
 
     var items = data.map(function(el) {
-      var item = el.doc;
+      var item = el.doc || {};
       var folder = (item.folder || {}).prettyName || ''; // lets not try to show a folder if there isn't one
-      var path = item.path ? formatUrl(item.path) : '#';
-      return [
-      '<li>',
-        '<a href="' + path + '">',
-          '<p class="docs-title">' + item.prettyName + '</p>',
-          '<p class="docs-attr">',
-            '<span class="docs-folder">' + folder + '</span>',
-            '<span class="timestamp">(' + el.lastViewed + ')</span>',
-          '</p>',
-         '</a>',
-      '</li>'
-      // use .join() to turn to html string
-      ].join('')
+
+      var attr = createTextElement('p', 'docs-attr');
+      attr.appendChild(createTextElement('span', 'docs-folder', folder));
+      attr.appendChild(createTextElement('span', 'timestamp', '(' + el.lastViewed + ')'));
+
+      var link = createTextElement('a');
+      link.setAttribute('href', safeHref(item.path));
+      link.appendChild(createTextElement('p', 'docs-title', item.prettyName));
+      link.appendChild(attr);
+
+      var li = createTextElement('li');
+      li.appendChild(link);
+      return li;
     });
 
     var className = elementAttributes.name.toLowerCase().replace(' ', '-') + '-content';
 
-    var fullSection = [
-      "<h3>" + elementAttributes.name + "</h3>",
-      "<ul class='" + className + "'>" + items.join('') + "</ul>"
-    ].join('');
+    var list = createTextElement('ul', className);
+    items.forEach(function(li) { list.appendChild(li); });
 
      // perform all the DOM manipulation as a single operation
-    $target.append(fullSection);
+    $target.append([createTextElement('h3', '', elementAttributes.name), list]);
   }
 
   function filenameMatcher(q, cb) {
@@ -133,11 +131,18 @@ function personalizeHomepage(userId) {
   fetchHistory('teams', userId, function(data) {
     var expectedLength = $('.teams-cat-list li').length
     var items = data.mostViewed.map(function(el) {
+      var team = el.team || {}
       // kill existing elements that on the mostViewed list to avoid dupes
-      $('ul.teams-cat-list li[data-team-id="' + el.team.id + '"]').detach()
+      $('ul.teams-cat-list li').filter(function() {
+        return this.getAttribute('data-team-id') === String(team.id)
+      }).detach()
 
-      return '<li><a class="button btn-cat" href="' + formatUrl(el.team.path) + '">' + el.team.prettyName + '</a></li>'
-    }).join('')
+      var link = createTextElement('a', 'button btn-cat', team.prettyName)
+      link.setAttribute('href', safeHref(team.path))
+      var li = createTextElement('li')
+      li.appendChild(link)
+      return li
+    })
 
     $('ul.teams-cat-list').prepend(items)
     $('ul.teams-cat-list li:gt(' + (expectedLength - 1) + ')').detach()
@@ -155,13 +160,40 @@ function personalizeHomepage(userId) {
       if(favorites.length < 3) { return }
 
       var items = favorites.map(function (el) {
-         return '<li><a href="' + el.doc.path + '">' + el.doc.prettyName + '</a></li>'
+        var link = createTextElement('a', '', el.doc.prettyName)
+        link.setAttribute('href', safeHref(el.doc.path))
+        var li = createTextElement('li')
+        li.appendChild(link)
+        return li
       })
 
-      $('.featured-cat-container h3').html('Favorite Docs')
-      $('ul.featured-cat-list').html(items)
+      $('.featured-cat-container h3').text('Favorite Docs')
+      $('ul.featured-cat-list').empty().append(items)
     })
   */
+}
+
+// Drive names and paths are untrusted: never pass them through an HTML parser.
+function createTextElement(tagName, className, text) {
+  var el = document.createElement(tagName)
+  if (className) el.className = className
+  if (text !== undefined && text !== null) el.textContent = String(text)
+  return el
+}
+
+// Only http(s) URLs (including relative library paths) may be used as link targets.
+function safeHref(path) {
+  if (typeof path !== 'string' || !path) return '#'
+  var url, parsed
+  try {
+    url = formatUrl(path)
+    parsed = new URL(url, window.location.href)
+  } catch (err) {
+    return '#'
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '#'
+  if (parsed.origin === window.location.origin) return parsed.pathname + parsed.search + parsed.hash
+  return parsed.href
 }
 
 function fetchHistory(type, userId, cb) {

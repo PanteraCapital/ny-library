@@ -2,7 +2,7 @@
   <%- include('search', {formatUrl}) %>
   <% if (locals.title) { %>
   <% if (locals.duplicates) { %>
-    <%- include('partials/warning', {message: template('warning.duplicate', locals.duplicates, locals.parentId), formatUrl}) %>
+    <%- include('partials/warning', {message: template('warning.duplicate', locals.duplicates.map((name) => escapeHtml(name)), escapeHtml(locals.parentId)), formatUrl}) %>
   <% } %>
   <h1 class="headline"><%= title %></h1>
   <div class="kicker">
