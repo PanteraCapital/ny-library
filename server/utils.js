@@ -4,7 +4,7 @@ const path = require('path')
 const {promisify} = require('util')
 const slugify = require('slugify')
 const yaml = require('js-yaml')
-const {get: deepProp} = require('lodash')
+const {get: deepProp, escape: escapeHtml} = require('lodash')
 const merge = require('deepmerge')
 const mime = require('mime-types')
 
@@ -134,6 +134,20 @@ exports.stringTemplate = (configPath, ...args) => {
   }
 
   return ''
+}
+
+exports.escapeHtml = escapeHtml
+
+const escapeTemplateArg = (arg) => {
+  if (Array.isArray(arg)) return arg.map(escapeTemplateArg)
+  return typeof arg === 'string' ? escapeHtml(arg) : arg
+}
+
+// For strings that are printed unescaped (`<%-`) because they contain markup.
+// Arguments are HTML-escaped before reaching the string function, so Drive
+// names, display names, and query strings can only ever render as text.
+exports.htmlTemplate = (configPath, ...args) => {
+  return exports.stringTemplate(configPath, ...args.map(escapeTemplateArg))
 }
 
 // When we stop supporting Node 8, let's drop promisify for fs.promises.readFile

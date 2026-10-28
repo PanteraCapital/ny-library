@@ -40,8 +40,8 @@ search:
     title: !!js/function (query) => `Search results for ${query}`
     kicker: !!js/function (query) => `Showing results for '${query}':`
     label:
-      folder: !!js/function (path, folder) => `Filed under <a class="folder" href=${path}><span>${folder}</span></a>`
-      person: !!js/function (lastUser) => `Last edited by <span class='author'>${lastUser}`
+      folder: !!js/function (path, folder) => `Filed under <a class="folder" href="${path}"><span>${folder}</span></a>`
+      person: !!js/function (lastUser) => `Last edited by <span class='author'>${lastUser}</span>`
     none:
       kicker: !!js/function (query) => `There are no results for '${query}'`
       suggestion: To request a new page, contact your administrators.
