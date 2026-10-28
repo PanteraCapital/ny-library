@@ -3,6 +3,7 @@ const cheerio = require('cheerio')
 const qs = require('querystring')
 const unescape = require('unescape')
 const hljs = require('highlight.js')
+const sanitizeHtml = require('sanitize-html')
 const list = require('./list')
 const {formatUrl} = require('./utils')
 
@@ -234,6 +235,49 @@ function convertYoutubeUrl(content) {
   return content
 }
 
+// Drive content is authored by anyone with edit access to the drive, so only
+// inert markup may reach the page. This must run on the final HTML, after any
+// step (spreadsheet conversion, inline code unescaping) that can emit markup.
+const sanitizeOptions = {
+  allowedTags: [
+    'a', 'abbr', 'b', 'blockquote', 'br', 'caption', 'cite', 'code', 'col', 'colgroup',
+    'dd', 'del', 'div', 'dl', 'dt', 'em', 'figcaption', 'figure', 'h1', 'h2', 'h3',
+    'h4', 'h5', 'h6', 'hr', 'i', 'iframe', 'img', 'ins', 'kbd', 'li', 'mark', 'ol',
+    'p', 'pre', 'q', 's', 'samp', 'small', 'span', 'strike', 'strong', 'style', 'sub',
+    'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'u', 'ul'
+  ],
+  allowedAttributes: {
+    '*': ['class', 'id', 'style', 'title', 'dir', 'lang'],
+    a: ['href', 'target', 'rel'],
+    img: ['src', 'alt', 'width', 'height'],
+    iframe: ['src', 'width', 'height', 'frameborder', 'allowfullscreen'],
+    code: ['data-lang'],
+    ol: ['start', 'type'],
+    col: ['span', 'width'],
+    colgroup: ['span', 'width'],
+    td: ['colspan', 'rowspan'],
+    th: ['colspan', 'rowspan', 'scope']
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  allowedSchemesByTag: {
+    img: ['http', 'https', 'data'],
+    iframe: ['https']
+  },
+  allowedSchemesAppliedToAttributes: ['href', 'src', 'cite'],
+  // only the YouTube embeds produced by convertYoutubeUrl are allowed to frame content
+  allowedIframeHostnames: ['www.youtube.com'],
+  allowIframeRelativeUrls: false,
+  exclusiveFilter: (frame) => frame.tag === 'iframe' && !/^https:\/\/www\.youtube\.com\/embed\//.test(frame.attribs.src || ''),
+  nonTextTags: ['script', 'textarea', 'option', 'noscript', 'title', 'template', 'xmp', 'noembed', 'noframes', 'plaintext'],
+  // <style> carries list formatting from Google Docs and inline code styles; CSS cannot run script
+  allowVulnerableTags: true,
+  parseStyleAttributes: false
+}
+
+function sanitize(html) {
+  return sanitizeHtml(html, sanitizeOptions)
+}
+
 function getProcessedHtml(src) {
   let html = normalizeHtml(src)
   html = convertYoutubeUrl(html)
@@ -253,5 +297,5 @@ exports.getProcessedDocAttributes = (driveDoc) => {
   const createdBy = ((revisionData || {}).lastModifyingUser || {}).displayName
   const {byline, html} = fetchByline(processedHtml, createdBy)
 
-  return {html, byline, createdBy, sections}
+  return {html: sanitize(html), byline, createdBy, sections}
 }

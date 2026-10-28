@@ -3,6 +3,7 @@ const path = require('path')
 
 const express = require('express')
 const csp = require('helmet-csp')
+const {escape: escapeHtml} = require('lodash')
 
 const {middleware: cache} = require('./cache')
 const {getMeta} = require('./list')
@@ -31,6 +32,9 @@ if ((process.env.TRUST_PROXY || '').toUpperCase() === 'TRUE') {
 
 app.set('view engine', 'ejs')
 app.set('views', [path.join(__dirname, '../custom/layouts'), path.join(__dirname, '../layouts')])
+// string templates interpolate their arguments into markup, so templates escape
+// user and Drive supplied values before passing them in
+app.locals.escapeHtml = escapeHtml
 
 app.get(formatUrl('/healthcheck'), (req, res) => {
   res.send('OK')

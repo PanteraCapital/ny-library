@@ -3,6 +3,7 @@
 const {google} = require('googleapis')
 const cheerio = require('cheerio')
 const xlsx = require('xlsx')
+const {escape: escapeHtml} = require('lodash')
 
 const cache = require('./cache')
 const formatter = require('./formatter')
@@ -124,7 +125,7 @@ async function fetchSpreadsheet(drive, id) {
 
     // spreadsheet names become h1 for TOC
     const slug = slugify(name)
-    return [`<h1 id="${slug}">${name}</h1>`, '<table>', table.html(), '</table>'].join('\n')
+    return [`<h1 id="${slug}">${escapeHtml(name)}</h1>`, '<table>', table.html(), '</table>'].join('\n')
   }, []).join('\n')
   // expected to be an array because of the way the google api works
   return html
