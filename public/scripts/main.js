@@ -78,11 +78,11 @@ $(document).ready(function() {
       var path = item.path ? formatUrl(item.path) : '#';
       return [
       '<li>',
-        '<a href="' + path + '">',
-          '<p class="docs-title">' + item.prettyName + '</p>',
+        '<a href="' + escapeHtml(path) + '">',
+          '<p class="docs-title">' + escapeHtml(item.prettyName) + '</p>',
           '<p class="docs-attr">',
-            '<span class="docs-folder">' + folder + '</span>',
-            '<span class="timestamp">(' + el.lastViewed + ')</span>',
+            '<span class="docs-folder">' + escapeHtml(folder) + '</span>',
+            '<span class="timestamp">(' + escapeHtml(el.lastViewed) + ')</span>',
           '</p>',
          '</a>',
       '</li>'
@@ -136,7 +136,7 @@ function personalizeHomepage(userId) {
       // kill existing elements that on the mostViewed list to avoid dupes
       $('ul.teams-cat-list li[data-team-id="' + el.team.id + '"]').detach()
 
-      return '<li><a class="button btn-cat" href="' + formatUrl(el.team.path) + '">' + el.team.prettyName + '</a></li>'
+      return '<li><a class="button btn-cat" href="' + escapeHtml(formatUrl(el.team.path)) + '">' + escapeHtml(el.team.prettyName) + '</a></li>'
     }).join('')
 
     $('ul.teams-cat-list').prepend(items)
@@ -162,6 +162,14 @@ function personalizeHomepage(userId) {
       $('ul.featured-cat-list').html(items)
     })
   */
+}
+
+var htmlEscapes = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function (chr) {
+    return htmlEscapes[chr]
+  })
 }
 
 function fetchHistory(type, userId, cb) {

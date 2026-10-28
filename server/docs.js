@@ -8,7 +8,7 @@ const cache = require('./cache')
 const formatter = require('./formatter')
 const log = require('./logger')
 const {getAuth} = require('./auth')
-const {slugify} = require('./utils')
+const {slugify, escapeHtml} = require('./utils')
 
 const supportedTypes = new Set(['document', 'spreadsheet', 'text/html'])
 
@@ -124,7 +124,7 @@ async function fetchSpreadsheet(drive, id) {
 
     // spreadsheet names become h1 for TOC
     const slug = slugify(name)
-    return [`<h1 id="${slug}">${name}</h1>`, '<table>', table.html(), '</table>'].join('\n')
+    return [`<h1 id="${slug}">${escapeHtml(name)}</h1>`, '<table>', table.html(), '</table>'].join('\n')
   }, []).join('\n')
   // expected to be an array because of the way the google api works
   return html

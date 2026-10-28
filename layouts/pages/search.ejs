@@ -9,23 +9,23 @@
     <div class="g-body">
       <div class="g-main-content" id="g-search-page">
         <% if (locals.results && results.length) { %>
-          <h3 class="search-kicker"><%- template('search.results.kicker', locals.q) %></h3>
+          <h3 class="search-kicker"><%- htmlTemplate('search.results.kicker', locals.q) %></h3>
           <% results.forEach((res) => { %>
           <div class="search-result">
             <h3><a href="<%= formatUrl(res.path) %>"><%= res.prettyName %></a></h3>
             <p>
               <% if (res.folder) { %>
-              <%- template('search.results.label.folder', formatUrl(res.folder.path), res.folder.prettyName || 'Home')%>&nbsp;
+              <%- htmlTemplate('search.results.label.folder', formatUrl(res.folder.path), res.folder.prettyName || 'Home')%>&nbsp;
               <% } %>
               <% if (res.lastModifyingUser && res.lastModifyingUser.displayName) { %>
-                <%- template('search.results.label.person', res.lastModifyingUser.displayName) %>
+                <%- htmlTemplate('search.results.label.person', res.lastModifyingUser.displayName) %>
               <% } %>
               <%= res.lastUpdated %>
             </p>
           </div>
           <% }) %>
         <% }  else { %>
-          <h3 class="search-kicker"><%- template('search.results.none.kicker', locals.q) %></h3>
+          <h3 class="search-kicker"><%- htmlTemplate('search.results.none.kicker', locals.q) %></h3>
           <p><%- template('search.results.none.suggestion') %></p>
         <% } %>
       </div>
